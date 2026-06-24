@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>불금 넷플릭스 주사위 (Netflix Dice)</title>
+  <!-- Google Fonts Import for Premium Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+  
+  <style>
+    /* Premium Netflix-style CSS Variables */
+    :root {
+      --bg-color: #141414;
+      --card-bg: rgba(31, 31, 31, 0.75);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --netflix-red: #E50914;
+      --netflix-red-hover: #F40612;
+      --netflix-red-glow: rgba(229, 9, 20, 0.4);
+      --text-main: #FFFFFF;
+      --text-sub: #A3A3A3;
+      --gold: #FFC107;
+      --transition-smooth: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      font-family: 'Noto Sans KR', 'Outfit', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Background Ambient Gradients */
+    body::before {
+      content: '';
+      position: absolute;
+      top: -10%;
+      left: 10%;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(229, 9, 20, 0.15) 0%, rgba(0,0,0,0) 70%);
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    body::after {
+      content: '';
+      position: absolute;
+      bottom: -10%;
+      right: 10%;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(229, 9, 20, 0.1) 0%, rgba(0,0,0,0) 70%);
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    /* Container */
+    .container {
+      width: 100%;
+      max-width: 1200px;
+      padding: 3rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2.5rem;
+    }
+
+    /* Header Styling */
+    header {
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .badge-top {
+      display: inline-block;
+      background-color: rgba(229, 9, 20, 0.15);
+      border: 1px solid var(--netflix-red);
+      color: var(--netflix-red);
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: 0.75rem;
+      letter-spacing: 2px;
+      padding: 0.4rem 1rem;
+      border-radius: 50px;
+      margin-bottom: 1rem;
+      text-transform: uppercase;
+      box-shadow: 0 0 15px rgba(229, 9, 20, 0.2);
+    }
+
+    h1 {
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 900;
+      letter-spacing: -1px;
+      margin-bottom: 0.75rem;
+      background: linear-gradient(135deg, #FFF 40%, #FF8A8A 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    h1 span {
+      color: var(--netflix-red);
+      -webkit-text-fill-color: initial;
+    }
+
+    .subtitle {
+      color: var(--text-sub);
+      font-size: clamp(0.9rem, 2vw, 1.15rem);
+      font-weight: 300;
+      max-width: 600px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    /* API Warning Banner / Input UI */
+    .api-container {
+      width: 100%;
+      max-width: 550px;
+      background: var(--card-bg);
+      border: 1px dashed var(--netflix-red);
+      border-radius: 16px;
+      padding: 2rem;
+      text-align: center;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+      transition: var(--transition-smooth);
+    }
+
+    .api-container h3 {
+      font-size: 1.25rem;
+      margin-bottom: 0.75rem;
+      color: #FF8A8A;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .api-container p {
+      font-size: 0.9rem;
+      color: var(--text-sub);
+      line-height: 1.5;
+      margin-bottom: 1.5rem;
+    }
+
+    .api-container a {
+      color: var(--netflix-red);
+      text-decoration: none;
+      font-weight: 500;
+      border-bottom: 1px solid var(--netflix-red);
+      transition: var(--transition-smooth);
+    }
+
+    .api-container a:hover {
+      color: var(--text-main);
+      border-color: var(--text-main);
+    }
+
+    .api-input-group {
+      display: flex;
+      gap: 0.5rem;
+      background: rgba(0,0,0,0.3);
+      padding: 0.4rem;
+      border-radius: 8px;
+      border: 1px solid var(--card-border);
+    }
+
+    .api-input-group input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text-main);
+      padding: 0.6rem 0.8rem;
+      font-size: 0.95rem;
+      outline: none;
+      font-family: 'Outfit', sans-serif;
+    }
+
+    .api-input-group button {
+      background-color: var(--netflix-red);
+      color: var(--text-main);
+      border: none;
+      padding: 0.6rem 1.2rem;
+      border-radius: 6px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: var(--transition-smooth);
+    }
+
+    .api-input-group button:hover {
+      background-color: var(--netflix-red-hover);
+      box-shadow: 0 0 12px var(--netflix-red-glow);
+    }
+
+    /* Core App Layout (Hidden until API Key setup) */
+    .app-main {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      gap: 3.5rem;
+    }
+
+    /* Interactive 3D Dice Area */
+    .dice-section-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      max-width: 450px;
+    }
+
+    .dice-scene {
+      width: 120px;
+      height: 120px;
+      perspective: 600px;
+      margin: 1.5rem auto;
+      cursor: pointer;
+    }
+
+    .cube {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transform: rotateX(-20deg) rotateY(45deg);
+      transition: transform 1.2s cubic-bezier(0.19, 1, 0.22, 1);
+    }
+
+    .face {
+      position: absolute;
+      width: 120px;
+      height: 120px;
+      background: linear-gradient(135deg, #252525 0%, #111 100%);
+      border: 3px solid #E50914;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3.5rem;
+      box-shadow: inset 0 0 15px rgba(229, 9, 20, 0.3), 
+                  0 0 25px rgba(229, 9, 20, 0.4);
+      backface-visibility: hidden;
+      user-select: none;
+    }
+
+    /* 3D Face Offsets */
+    .face.front  { transform: rotateY(0deg) translateZ(60px); }
+    .face.back   { transform: rotateY(180deg) translateZ(60px); }
+    .face.right  { transform: rotateY(90deg) translateZ(60px); }
+    .face.left   { transform: rotateY(-90deg) translateZ(60px); }
+    .face.top    { transform: rotateX(90deg) translateZ(60px); }
+    .face.bottom { transform: rotateX(-90deg) translateZ(60px); }
+
+    /* Dice Spinner Keyframes for wild rotation */
+    @keyframes rollSpin {
+      0% { transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
+      50% { transform: rotateX(360deg) rotateY(720deg) rotateZ(180deg); }
+      100% { transform: rotateX(720deg) rotateY(1440deg) rotateZ(360deg); }
+    }
+
+    .cube.rolling {
+      animation: rollSpin 0.25s infinite linear;
+    }
+
+    /* Mood Selector Grid */
+    .mood-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+      width: 100%;
+      margin-top: 1rem;
+    }
+
+    @media (max-width: 500px) {
+      .mood-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .mood-btn {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 1.25rem 1rem;
+      color: var(--text-main);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.6rem;
+      transition: var(--transition-smooth);
+      backdrop-filter: blur(12px);
+      text-align: center;
+    }
+
+    .mood-btn:hover {
+      border-color: var(--netflix-red);
+      transform: translateY(-4px);
+      box-shadow: 0 8px 25px rgba(229, 9, 20, 0.15);
+      background: rgba(40, 40, 40, 0.85);
+    }
+
+    .mood-btn.active {
+      border-color: var(--netflix-red);
+      background: rgba(229, 9, 20, 0.1);
+      box-shadow: 0 0 20px rgba(229, 9, 20, 0.25);
+    }
+
+    .mood-emoji {
+      font-size: 2.2rem;
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+      transition: var(--transition-smooth);
+    }
+
+    .mood-btn:hover .mood-emoji {
+      transform: scale(1.15) rotate(5deg);
+    }
+
+    .mood-title {
+      font-weight: 700;
+      font-size: 0.95rem;
+      letter-spacing: -0.5px;
+    }
+
+    .mood-desc {
+      font-size: 0.75rem;
+      color: var(--text-sub);
+    }
+
+    /* Loading UI */
+    .loading-status {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.8rem;
+      margin: 2rem 0;
+    }
+
+    .loading-bar-outer {
+      width: 200px;
+      height: 4px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .loading-bar-inner {
+      width: 0%;
+      height: 100%;
+      background-color: var(--netflix-red);
+      box-shadow: 0 0 10px var(--netflix-red-glow);
+      animation: progressAnim 1s ease-in-out forwards;
+    }
+
+    @keyframes progressAnim {
+      0% { width: 0%; }
+      100% { width: 100%; }
+    }
+
+    .loading-text {
+      font-size: 0.85rem;
+      color: var(--netflix-red);
+      font-weight: 500;
+      letter-spacing: 1px;
+      animation: pulse 1s infinite alternate;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
+
+    /* Results Header Badge & Actions */
+    .results-header-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      margin-bottom: 0.5rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      padding-bottom: 0.75rem;
+    }
+
+    .filter-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #10B981;
+      font-size: 0.75rem;
+      padding: 0.3rem 0.7rem;
+      border-radius: 50px;
+      font-weight: 500;
+    }
+
+    .filter-badge.fallback {
+      background: rgba(245, 158, 11, 0.1);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      color: #F59E0B;
+    }
+
+    /* Movie Results Section */
+    .results-section {
+      width: 100%;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.5rem;
+      animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .movies-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      width: 100%;
+    }
+
+    @media (max-width: 900px) {
+      .movies-grid {
+        grid-template-columns: 1fr;
+        max-width: 450px;
+      }
+    }
+
+    /* Movie Card Design */
+    .movie-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      transition: var(--transition-smooth);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      position: relative;
+    }
+
+    .movie-card:hover {
+      transform: translateY(-8px) scale(1.02);
+      border-color: rgba(229, 9, 20, 0.3);
+      box-shadow: 0 15px 35px rgba(0,0,0,0.5), 
+                  0 0 20px rgba(229, 9, 20, 0.1);
+    }
+
+    /* Movie Poster Image */
+    .movie-poster-wrapper {
+      position: relative;
+      width: 100%;
+      padding-top: 150%; /* 2:3 aspect ratio */
+      background-color: #0c0c0c;
+      overflow: hidden;
+    }
+
+    .movie-poster {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .movie-card:hover .movie-poster {
+      transform: scale(1.08);
+    }
+
+    /* Poster Fallback text when image is missing */
+    .poster-fallback {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      text-align: center;
+      color: var(--text-sub);
+      gap: 0.5rem;
+      background: linear-gradient(135deg, #1f1f1f, #0f0f0f);
+    }
+
+    .poster-fallback span {
+      font-size: 2rem;
+    }
+
+    /* Score Overlay */
+    .score-badge {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background-color: rgba(0, 0, 0, 0.75);
+      border: 1px solid var(--gold);
+      color: var(--gold);
+      backdrop-filter: blur(8px);
+      padding: 0.3rem 0.6rem;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+
+    /* Movie Card Content */
+    .movie-info {
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      flex: 1;
+    }
+
+    .movie-meta {
+      font-size: 0.75rem;
+      color: var(--text-sub);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .movie-title {
+      font-size: 1.2rem;
+      font-weight: 800;
+      line-height: 1.3;
+      color: var(--text-main);
+      /* Prevent clipping on long text */
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+
+    .movie-overview {
+      font-size: 0.85rem;
+      color: var(--text-sub);
+      line-height: 1.5;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      margin-bottom: 0.5rem;
+    }
+
+    /* Action Buttons */
+    .netflix-btn {
+      margin-top: auto;
+      background-color: var(--netflix-red);
+      color: var(--text-main);
+      text-decoration: none;
+      border-radius: 8px;
+      padding: 0.8rem;
+      text-align: center;
+      font-weight: 700;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: var(--transition-smooth);
+      border: none;
+      cursor: pointer;
+    }
+
+    .netflix-btn:hover {
+      background-color: var(--netflix-red-hover);
+      box-shadow: 0 5px 15px var(--netflix-red-glow);
+      transform: translateY(-2px);
+    }
+
+    .netflix-btn svg {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+    }
+
+    /* General Utilities */
+    .hidden {
+      display: none !important;
+    }
+
+    /* Custom Toast Notification styling */
+    .toast-notification {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background-color: #1f2937;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #fff;
+      padding: 0.8rem 1.5rem;
+      border-radius: 50px;
+      font-size: 0.9rem;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      z-index: 9999;
+      pointer-events: none;
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s;
+      opacity: 0;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .toast-notification.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    /* Footer styling */
+    footer {
+      margin-top: auto;
+      padding: 2.5rem 1rem 1.5rem;
+      text-align: center;
+      font-size: 0.75rem;
+      color: #555555;
+      width: 100%;
+      border-top: 1px solid rgba(255, 255, 255, 0.03);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    
+    <header>
+      <div class="badge-top">Netflix Dice</div>
+      <h1>불금 <span>넷플릭스 주사위</span></h1>
+      <p class="subtitle">퇴근 후 피곤한 몸을 이끌고 무엇을 볼지 고르느라 더 피로해지셨나요?<br>평점 7.5점 이상, 투표수 500개 이상 검증된 작품 중 딱 3개만 추천해 드릴게요.</p>
+    </header>
+
+    <!-- TMDB API Key Section (Visible only when API key is empty) -->
+    <div id="api-setup-card" class="api-container">
+      <h3>
+        <svg style="width:20px;height:20px;fill:#E50914" viewBox="0 0 24 24">
+          <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,6A1.5,1.5 0 0,0 10.5,7.5A1.5,1.5 0 0,0 12,9A1.5,1.5 0 0,0 13.5,7.5A1.5,1.5 0 0,0 12,6M11,11V18H13V11H11Z" />
+        </svg>
+        TMDB API 인증키 입력 필요
+      </h3>
+      <p>
+        이 웹앱은 실시간 영화 추천 데이터를 TMDB(The Movie Database)에서 직접 조회합니다.<br>
+        개발용 API 키(무료)를 입력하시거나, 소스 코드의 최상단 <code>const TMDB_API_KEY</code> 변수에 기입해 주세요.<br>
+        <a href="https://www.themoviedb.org/signup" target="_blank" rel="noopener">TMDB 가입하고 무료 API 키 발급받는 방법 ↗</a>
+      </p>
+      <div class="api-input-group">
+        <input type="text" id="api-key-input" placeholder="TMDB API 키(v3)를 입력해 주세요." autocomplete="off">
+        <button id="api-save-btn">시작하기</button>
+      </div>
+    </div>
+
+    <!-- Main Application UI (Starts hidden or shown based on API key) -->
+    <div id="app-content" class="app-main hidden">
+      
+      <!-- 3D Dice Display -->
+      <div class="dice-section-wrapper">
+        <div class="dice-scene" id="dice-trigger" title="주사위를 굴리려면 기분을 선택하세요!">
+          <div class="cube" id="dice-cube">
+            <!-- 6 faces with diverse emojis -->
+            <div class="face front">🧠</div>
+            <div class="face back">🍿</div>
+            <div class="face right">💧</div>
+            <div class="face left">🚀</div>
+            <div class="face top">🎲</div>
+            <div class="face bottom">🎬</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mood Selection Buttons Grid -->
+      <div class="mood-grid">
+        <button class="mood-btn" data-mood="funny" data-genres="35,28">
+          <span class="mood-emoji">🧠</span>
+          <span class="mood-title">뇌 빼고 웃고 싶어</span>
+          <span class="mood-desc">코미디, 액션</span>
+        </button>
+
+        <button class="mood-btn" data-mood="thrill" data-genres="53,9648">
+          <span class="mood-emoji">🍿</span>
+          <span class="mood-title">심장 쫄깃한 스릴러</span>
+          <span class="mood-desc">미스터리, 스릴러</span>
+        </button>
+
+        <button class="mood-btn" data-mood="tear" data-genres="18,10749">
+          <span class="mood-emoji">💧</span>
+          <span class="mood-title">잔잔한 눈물 한 방울</span>
+          <span class="mood-desc">드라마, 로맨스</span>
+        </button>
+
+        <button class="mood-btn" data-mood="fantasy" data-genres="878,14">
+          <span class="mood-emoji">🚀</span>
+          <span class="mood-title">웅장한 세계관 속으로</span>
+          <span class="mood-desc">SF, 판타지</span>
+        </button>
+      </div>
+
+      <!-- Loading State Panel -->
+      <div class="loading-status" id="loading-panel">
+        <div class="loading-bar-outer">
+          <div class="loading-bar-inner" id="loading-bar"></div>
+        </div>
+        <div class="loading-text" id="loading-text-msg">주사위 굴리는 중...</div>
+      </div>
+
+      <!-- Recommendations Output Section -->
+      <div class="results-section" id="results-area">
+        <div class="results-header-info">
+          <span style="font-weight: 700; font-size: 1.1rem; color: #FFF;">오늘의 추천 웰메이드 TOP 3</span>
+          <span class="filter-badge" id="filtering-badge">
+            <svg style="width:12px;height:12px;fill:currentColor" viewBox="0 0 24 24">
+              <path d="M12,2A10,10 0 1,0 22,12A10,10 0 0,0 12,2M12,20A8,8 0 1,1 20,12A8,8 0 0,1 12,20M11,15H13V17H11V15M11,7H13V13H11V7Z" />
+            </svg>
+            평점 7.5+ | 투표수 500+ 만족
+          </span>
+        </div>
+        <div class="movies-grid" id="movies-container">
+          <!-- Movie cards will be dynamically rendered here -->
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Toast Toast Notification Structure -->
+  <div id="toast" class="toast-notification"></div>
+
+  <footer>
+    <p>불금 넷플릭스 주사위 © 2026. Powered by TMDB API. 모든 영화 정보의 저작권은 TMDB에 있습니다.</p>
+  </footer>
+
+  <script>
+    /*************************************************************************
+     * 1. API 키 설정 (보안상 비워두며, 비워둘 시 브라우저 화면에서 임시 입력 가능)
+     * 직접 하드코딩하려면 아래 변수에 키 값을 기입해 주세요. (예: 'abcd1234...')
+     *************************************************************************/
+    const TMDB_API_KEY = 'f0ffd0a350bd6507628504b6b27e54b4';
+
+    // 메모리 내에 키 값을 유지할 전역 변수
+    let activeApiKey = TMDB_API_KEY;
+
+    // DOM Elements
+    const apiSetupCard = document.getElementById('api-setup-card');
+    const apiKeyInput = document.getElementById('api-key-input');
+    const apiSaveBtn = document.getElementById('api-save-btn');
+    const appContent = document.getElementById('app-content');
+    const diceCube = document.getElementById('dice-cube');
+    const moodButtons = document.querySelectorAll('.mood-btn');
+    const loadingPanel = document.getElementById('loading-panel');
+    const loadingBar = document.getElementById('loading-bar');
+    const resultsArea = document.getElementById('results-area');
+    const moviesContainer = document.getElementById('movies-container');
+    const filterBadge = document.getElementById('filtering-badge');
+    const toast = document.getElementById('toast');
+
+    // State Variables
+    let isRolling = false;
+    let selectedMood = '';
+    let selectedGenres = '';
+
+    // Cube rotation lookup table per mood to show the matching face on completion
+    const faceRotations = {
+      funny: 'rotateY(0deg)',        // Front 🧠
+      thrill: 'rotateY(180deg)',     // Back 🍿
+      tear: 'rotateY(-90deg)',       // Right 💧
+      fantasy: 'rotateY(90deg)'      // Left 🚀
+    };
+
+    // Initialize application state
+    function init() {
+      if (activeApiKey && activeApiKey.trim() !== '' && activeApiKey !== 'YOUR_KEY_HERE') {
+        showApp();
+      } else {
+        showApiSetup();
+      }
+    }
+
+    function showApiSetup() {
+      apiSetupCard.classList.remove('hidden');
+      appContent.classList.add('hidden');
+    }
+
+    function showApp() {
+      apiSetupCard.classList.add('hidden');
+      appContent.classList.remove('hidden');
+    }
+
+    // Temporary Save API Key handler (pure memory storage, satisfies the constraints)
+    apiSaveBtn.addEventListener('click', () => {
+      const key = apiKeyInput.value.trim();
+      if (!key) {
+        showToast('올바른 API 키를 입력해 주세요!');
+        return;
+      }
+      activeApiKey = key;
+      showToast('API 키가 메모리에 등록되었습니다.');
+      showApp();
+    });
+
+    apiKeyInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        apiSaveBtn.click();
+      }
+    });
+
+    // Custom Toast Notification display
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+
+    // Mood Button Click Listeners
+    moodButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (isRolling) return;
+        
+        // Remove active class from other buttons, highlight selected
+        moodButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        selectedMood = btn.dataset.mood;
+        selectedGenres = btn.dataset.genres;
+        
+        rollDiceAndFetch();
+      });
+    });
+
+    // Main Operation: 3D Dice Spin & TMDB API Fetch
+    async function rollDiceAndFetch() {
+      isRolling = true;
+      resultsArea.style.display = 'none';
+      
+      // 1. Start 3D Cube Spin Animation
+      diceCube.classList.add('rolling');
+      
+      // Show loading progress bar
+      loadingPanel.style.display = 'flex';
+      loadingBar.style.width = '0%';
+      // Trigger reflow to restart animation
+      void loadingBar.offsetWidth;
+      loadingBar.style.animation = 'progressAnim 1s ease-in-out forwards';
+
+      // Start asynchronous API fetch concurrently with the loading timer
+      const startTime = Date.now();
+      let movies = [];
+      let fetchError = null;
+      let usedFallback = false;
+
+      try {
+        movies = await fetchWellMadeMovies(selectedGenres);
+      } catch (err) {
+        console.error(err);
+        fetchError = err.message;
+      }
+
+      // Ensure the dice rolls for at least 1000ms for sensory satisfaction
+      const elapsedTime = Date.now() - startTime;
+      const remainingTime = Math.max(0, 1000 - elapsedTime);
+      await new Promise(resolve => setTimeout(resolve, remainingTime));
+
+      // 2. Stop Cube Spin and point it to the matching face
+      diceCube.classList.remove('rolling');
+      if (faceRotations[selectedMood]) {
+        // Apply rotation based on selected mood
+        diceCube.style.transform = faceRotations[selectedMood];
+      }
+
+      // Hide loading panel
+      loadingPanel.style.display = 'none';
+      isRolling = false;
+
+      if (fetchError) {
+        showToast(`오류 발생: ${fetchError}`);
+        // If TMDB key seems invalid, reset view to API Setup
+        if (fetchError.includes('401') || fetchError.toLowerCase().includes('key')) {
+          activeApiKey = '';
+          showApiSetup();
+        }
+        return;
+      }
+
+      // 3. Select exactly 3 movies using Math.random()
+      // TMDB Discover returns top popular. Let's filter carefully.
+      let wellMade = movies.filter(m => m.vote_average >= 7.5 && m.vote_count >= 500);
+
+      // Rule-based Graceful Fallback if we don't have at least 3 movies matching 7.5 / 500
+      if (wellMade.length < 3) {
+        usedFallback = true;
+        // Relax rules slightly (vote_average >= 7.0, vote_count >= 200)
+        wellMade = movies.filter(m => m.vote_average >= 7.0 && m.vote_count >= 200);
+        
+        // If still not enough, take whatever movies TMDB returned
+        if (wellMade.length < 3) {
+          wellMade = movies;
+        }
+      }
+
+      // Randomly shuffle using Math.random() and take exactly 3
+      const selectedMovies = wellMade
+        .sort(() => 0.5 - Math.random())
+        .slice(0, 3);
+
+      if (selectedMovies.length === 0) {
+        showToast('조건에 부합하는 영화 정보가 없습니다. 다시 시도해 주세요.');
+        return;
+      }
+
+      // 4. Update UI Results
+      updateBadgeUI(usedFallback);
+      renderMovieCards(selectedMovies);
+      resultsArea.style.display = 'flex';
+      
+      // Scroll smoothly to results
+      resultsArea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    // TMDB API calls
+    async function fetchWellMadeMovies(genreIds) {
+      // TMDB Discover endpoints for Movies.
+      // We will pull the first 3 pages of results to gather a strong sample of ~60 candidates
+      const pages = [1, 2, 3];
+      
+      const fetchPromises = pages.map(page => {
+        const url = `https://api.themoviedb.org/3/discover/movie?api_key=${activeApiKey}&with_genres=${genreIds}&language=ko-KR&include_adult=false&sort_by=popularity.desc&page=${page}`;
+        return fetch(url)
+          .then(async response => {
+            if (!response.ok) {
+              const errBody = await response.json().catch(() => ({}));
+              throw new Error(errBody.status_message || `HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+          })
+          .then(data => data.results || []);
+      });
+
+      const responses = await Promise.all(fetchPromises);
+      // Flatten arrays and remove duplicate entries if they appear across page boundaries
+      const allResults = responses.flat();
+      const uniqueResults = Array.from(new Map(allResults.map(item => [item.id, item])).values());
+      return uniqueResults;
+    }
+
+    // Dynamically toggle badge texts & styling
+    function updateBadgeUI(usedFallback) {
+      if (usedFallback) {
+        filterBadge.className = 'filter-badge fallback';
+        filterBadge.innerHTML = `
+          <svg style="width:12px;height:12px;fill:currentColor" viewBox="0 0 24 24">
+            <path d="M12,2A10,10 0 1,0 22,12A10,10 0 0,0 12,2M12,20A8,8 0 1,1 20,12A8,8 0 0,1 12,20M11,15H13V17H11V15M11,7H13V13H11V7Z" />
+          </svg>
+          최적 매칭 영화 검색됨 (필터 완화)
+        `;
+      } else {
+        filterBadge.className = 'filter-badge';
+        filterBadge.innerHTML = `
+          <svg style="width:12px;height:12px;fill:currentColor" viewBox="0 0 24 24">
+            <path d="M10,17L5,12L6.41,10.58L10,14.17L17.59,6.58L19,8M12,2A10,10 0 1,0 22,12A10,10 0 0,0 12,2Z" />
+          </svg>
+          평점 7.5+ | 투표수 500+ 만족
+        `;
+      }
+    }
+
+    // Render Movie Cards to UI
+    function renderMovieCards(moviesList) {
+      moviesContainer.innerHTML = '';
+      
+      moviesList.forEach(movie => {
+        const card = document.createElement('div');
+        card.className = 'movie-card';
+
+        // Release Date parsing
+        const releaseYear = movie.release_date ? movie.release_date.split('-')[0] : '연도 미상';
+        const ratingScore = movie.vote_average ? movie.vote_average.toFixed(1) : '평가 없음';
+        
+        // Netflix search queries should encode URI component safely
+        const netflixSearchUrl = `https://www.netflix.com/search?q=${encodeURIComponent(movie.title)}`;
+
+        // Poster image construction. If null, use elegant title fallback
+        const posterUrl = movie.poster_path 
+          ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` 
+          : null;
+
+        const overviewText = movie.overview ? movie.overview : '등록된 줄거리 요약 정보가 없습니다.';
+
+        card.innerHTML = `
+          <div class="movie-poster-wrapper">
+            ${posterUrl 
+              ? `<img src="${posterUrl}" alt="${movie.title} 포스터" class="movie-poster" loading="lazy">`
+              : `<div class="poster-fallback">
+                  <span>🎬</span>
+                  <div style="font-weight:700; font-size:1rem;">${movie.title}</div>
+                  <div style="font-size:0.75rem; color:var(--text-sub)">이미지 준비중</div>
+                 </div>`
+            }
+            <span class="score-badge">★ ${ratingScore}</span>
+          </div>
+          <div class="movie-info">
+            <div class="movie-meta">
+              <span>개봉: ${releaseYear}</span>
+              <span>투표: ${movie.vote_count.toLocaleString()}회</span>
+            </div>
+            <h4 class="movie-title" title="${movie.title}">${movie.title}</h4>
+            <p class="movie-overview" title="${overviewText}">${overviewText}</p>
+            <a href="${netflixSearchUrl}" target="_blank" rel="noopener noreferrer" class="netflix-btn">
+              <svg viewBox="0 0 24 24">
+                <path d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z"/>
+              </svg>
+              넷플릭스에서 검색
+            </a>
+          </div>
+        `;
+        moviesContainer.appendChild(card);
+      });
+    }
+
+    // Run Initial checks
+    window.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>

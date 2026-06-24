@@ -280,10 +280,16 @@
     /* Mood Selector Grid */
     .mood-grid {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(3, 1fr);
       gap: 1rem;
       width: 100%;
       margin-top: 1rem;
+    }
+
+    @media (max-width: 768px) {
+      .mood-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
     }
 
     @media (max-width: 500px) {
@@ -536,6 +542,33 @@
       box-shadow: 0 4px 10px rgba(0,0,0,0.3);
     }
 
+    /* Media Type Badge Overlay */
+    .media-type-badge {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      backdrop-filter: blur(8px);
+      padding: 0.3rem 0.6rem;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 0.8rem;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      text-transform: uppercase;
+      z-index: 2;
+    }
+    
+    .media-movie {
+      background-color: rgba(229, 9, 20, 0.85); /* Netflix Red */
+      border: 1px solid var(--netflix-red);
+      color: #FFF;
+    }
+    
+    .media-tv {
+      background-color: rgba(0, 112, 240, 0.85); /* Blue */
+      border: 1px solid #0070f0;
+      color: #FFF;
+    }
+
     /* Movie Card Content */
     .movie-info {
       padding: 1.5rem;
@@ -703,28 +736,40 @@
 
       <!-- Mood Selection Buttons Grid -->
       <div class="mood-grid">
-        <button class="mood-btn" data-mood="funny" data-genres="35,28">
+        <button class="mood-btn" data-mood="funny">
           <span class="mood-emoji">🧠</span>
           <span class="mood-title">뇌 빼고 웃고 싶어</span>
           <span class="mood-desc">코미디, 액션</span>
         </button>
 
-        <button class="mood-btn" data-mood="thrill" data-genres="53,9648">
+        <button class="mood-btn" data-mood="thrill">
           <span class="mood-emoji">🍿</span>
           <span class="mood-title">심장 쫄깃한 스릴러</span>
-          <span class="mood-desc">미스터리, 스릴러</span>
+          <span class="mood-desc">미스터리, 스릴러, 범죄</span>
         </button>
 
-        <button class="mood-btn" data-mood="tear" data-genres="18,10749">
+        <button class="mood-btn" data-mood="tear">
           <span class="mood-emoji">💧</span>
           <span class="mood-title">잔잔한 눈물 한 방울</span>
           <span class="mood-desc">드라마, 로맨스</span>
         </button>
 
-        <button class="mood-btn" data-mood="fantasy" data-genres="878,14">
+        <button class="mood-btn" data-mood="fantasy">
           <span class="mood-emoji">🚀</span>
           <span class="mood-title">웅장한 세계관 속으로</span>
           <span class="mood-desc">SF, 판타지</span>
+        </button>
+
+        <button class="mood-btn" data-mood="horror">
+          <span class="mood-emoji">🎲</span>
+          <span class="mood-title">등골 오싹한 공포</span>
+          <span class="mood-desc">공포, 미스터리</span>
+        </button>
+
+        <button class="mood-btn" data-mood="action">
+          <span class="mood-emoji">🎬</span>
+          <span class="mood-title">시간 순삭! 몰입감 최강</span>
+          <span class="mood-desc">액션, 모험, 범죄</span>
         </button>
       </div>
 
@@ -790,14 +835,39 @@
     // State Variables
     let isRolling = false;
     let selectedMood = '';
-    let selectedGenres = '';
 
-    // Cube rotation lookup table per mood to show the matching face on completion
-    const faceRotations = {
-      funny: 'rotateY(0deg)',        // Front 🧠
-      thrill: 'rotateY(180deg)',     // Back 🍿
-      tear: 'rotateY(-90deg)',       // Right 💧
-      fantasy: 'rotateY(90deg)'      // Left 🚀
+    // Configuration for all 6 moods matching the 6 dice faces
+    const moodConfig = {
+      funny: {
+        movieGenres: '35,28',
+        tvGenres: '35,10759',
+        rotation: 'rotateY(0deg)'        // Front 🧠
+      },
+      thrill: {
+        movieGenres: '53,9648,80',
+        tvGenres: '9648,80',
+        rotation: 'rotateY(180deg)'     // Back 🍿
+      },
+      tear: {
+        movieGenres: '18,10749',
+        tvGenres: '18',
+        rotation: 'rotateY(-90deg)'      // Right 💧
+      },
+      fantasy: {
+        movieGenres: '878,14',
+        tvGenres: '10765',
+        rotation: 'rotateY(90deg)'       // Left 🚀
+      },
+      horror: {
+        movieGenres: '27,9648',
+        tvGenres: '9648',
+        rotation: 'rotateX(-90deg)'      // Top 🎲
+      },
+      action: {
+        movieGenres: '80,28,12',
+        tvGenres: '80,10759',
+        rotation: 'rotateX(90deg)'       // Bottom 🎬
+      }
     };
 
     // Initialize application state
@@ -856,11 +926,66 @@
         btn.classList.add('active');
 
         selectedMood = btn.dataset.mood;
-        selectedGenres = btn.dataset.genres;
         
         rollDiceAndFetch();
       });
     });
+
+    // Helper to generate N unique random pages from 1 to maxPage
+    function getRandomPages(maxPage, count) {
+      const pages = [];
+      const actualMax = Math.max(1, maxPage);
+      while (pages.length < Math.min(count, actualMax)) {
+        const p = Math.floor(Math.random() * actualMax) + 1;
+        if (!pages.includes(p)) {
+          pages.push(p);
+        }
+      }
+      return pages;
+    }
+
+    // Fetch a single page from TMDB discover endpoint
+    async function fetchFromTMDB(type, genreIds, page) {
+      const url = `https://api.themoviedb.org/3/discover/${type}?api_key=${activeApiKey}&with_genres=${genreIds}&language=ko-KR&sort_by=popularity.desc&page=${page}`;
+      const response = await fetch(url);
+      if (!response.ok) {
+        const errBody = await response.json().catch(() => ({}));
+        throw new Error(errBody.status_message || `HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      return data.results || [];
+    }
+
+    // Fetch combined media candidates for a mood configuration
+    async function fetchCombinedMedia(moodKey) {
+      const config = moodConfig[moodKey];
+      if (!config) throw new Error('올바르지 않은 기분 설정입니다.');
+
+      // Pick 2 random pages between 1 and 5 for both movies and tv
+      const moviePages = getRandomPages(5, 2);
+      const tvPages = getRandomPages(5, 2);
+
+      const moviePromises = moviePages.map(page => 
+        fetchFromTMDB('movie', config.movieGenres, page)
+          .then(list => list.map(item => ({ ...item, media_type: 'movie' })))
+      );
+      
+      const tvPromises = tvPages.map(page => 
+        fetchFromTMDB('tv', config.tvGenres, page)
+          .then(list => list.map(item => ({ ...item, media_type: 'tv' })))
+      );
+
+      const allPromiseResults = await Promise.all([...moviePromises, ...tvPromises]);
+      const mergedList = allPromiseResults.flat();
+      
+      // Deduplicate by combining media_type and id
+      const uniqueMap = new Map();
+      mergedList.forEach(item => {
+        uniqueMap.set(`${item.media_type}_${item.id}`, item);
+      });
+      
+      return Array.from(uniqueMap.values());
+    }
 
     // Main Operation: 3D Dice Spin & TMDB API Fetch
     async function rollDiceAndFetch() {
@@ -879,12 +1004,12 @@
 
       // Start asynchronous API fetch concurrently with the loading timer
       const startTime = Date.now();
-      let movies = [];
+      let candidates = [];
       let fetchError = null;
       let usedFallback = false;
 
       try {
-        movies = await fetchWellMadeMovies(selectedGenres);
+        candidates = await fetchCombinedMedia(selectedMood);
       } catch (err) {
         console.error(err);
         fetchError = err.message;
@@ -897,9 +1022,10 @@
 
       // 2. Stop Cube Spin and point it to the matching face
       diceCube.classList.remove('rolling');
-      if (faceRotations[selectedMood]) {
+      const config = moodConfig[selectedMood];
+      if (config && config.rotation) {
         // Apply rotation based on selected mood
-        diceCube.style.transform = faceRotations[selectedMood];
+        diceCube.style.transform = config.rotation;
       }
 
       // Hide loading panel
@@ -916,65 +1042,51 @@
         return;
       }
 
-      // 3. Select exactly 3 movies using Math.random()
-      // TMDB Discover returns top popular. Let's filter carefully.
-      let wellMade = movies.filter(m => m.vote_average >= 7.5 && m.vote_count >= 500);
+      // 3. Filter well-made media items
+      // Movie: vote_average >= 7.5, vote_count >= 500
+      // TV Show: vote_average >= 7.5, vote_count >= 100
+      let wellMade = candidates.filter(m => {
+        if (m.media_type === 'movie') {
+          return m.vote_average >= 7.5 && m.vote_count >= 500;
+        } else {
+          return m.vote_average >= 7.5 && m.vote_count >= 100;
+        }
+      });
 
-      // Rule-based Graceful Fallback if we don't have at least 3 movies matching 7.5 / 500
+      // Graceful Fallback: Relax guidelines if we don't have at least 3
       if (wellMade.length < 3) {
         usedFallback = true;
-        // Relax rules slightly (vote_average >= 7.0, vote_count >= 200)
-        wellMade = movies.filter(m => m.vote_average >= 7.0 && m.vote_count >= 200);
+        wellMade = candidates.filter(m => {
+          if (m.media_type === 'movie') {
+            return m.vote_average >= 7.0 && m.vote_count >= 200;
+          } else {
+            return m.vote_average >= 7.0 && m.vote_count >= 50;
+          }
+        });
         
-        // If still not enough, take whatever movies TMDB returned
+        // Final fallback: take whatever TMDB returned
         if (wellMade.length < 3) {
-          wellMade = movies;
+          wellMade = candidates;
         }
       }
 
       // Randomly shuffle using Math.random() and take exactly 3
-      const selectedMovies = wellMade
+      const selectedMedia = wellMade
         .sort(() => 0.5 - Math.random())
         .slice(0, 3);
 
-      if (selectedMovies.length === 0) {
-        showToast('조건에 부합하는 영화 정보가 없습니다. 다시 시도해 주세요.');
+      if (selectedMedia.length === 0) {
+        showToast('조건에 부합하는 작품 정보가 없습니다. 다시 시도해 주세요.');
         return;
       }
 
       // 4. Update UI Results
       updateBadgeUI(usedFallback);
-      renderMovieCards(selectedMovies);
+      renderMovieCards(selectedMedia);
       resultsArea.style.display = 'flex';
       
       // Scroll smoothly to results
       resultsArea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }
-
-    // TMDB API calls
-    async function fetchWellMadeMovies(genreIds) {
-      // TMDB Discover endpoints for Movies.
-      // We will pull the first 3 pages of results to gather a strong sample of ~60 candidates
-      const pages = [1, 2, 3];
-      
-      const fetchPromises = pages.map(page => {
-        const url = `https://api.themoviedb.org/3/discover/movie?api_key=${activeApiKey}&with_genres=${genreIds}&language=ko-KR&include_adult=false&sort_by=popularity.desc&page=${page}`;
-        return fetch(url)
-          .then(async response => {
-            if (!response.ok) {
-              const errBody = await response.json().catch(() => ({}));
-              throw new Error(errBody.status_message || `HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-          })
-          .then(data => data.results || []);
-      });
-
-      const responses = await Promise.all(fetchPromises);
-      // Flatten arrays and remove duplicate entries if they appear across page boundaries
-      const allResults = responses.flat();
-      const uniqueResults = Array.from(new Map(allResults.map(item => [item.id, item])).values());
-      return uniqueResults;
     }
 
     // Dynamically toggle badge texts & styling
@@ -985,7 +1097,7 @@
           <svg style="width:12px;height:12px;fill:currentColor" viewBox="0 0 24 24">
             <path d="M12,2A10,10 0 1,0 22,12A10,10 0 0,0 12,2M12,20A8,8 0 1,1 20,12A8,8 0 0,1 12,20M11,15H13V17H11V15M11,7H13V13H11V7Z" />
           </svg>
-          최적 매칭 영화 검색됨 (필터 완화)
+          최적 매칭 검색됨 (필터 완화)
         `;
       } else {
         filterBadge.className = 'filter-badge';
@@ -993,51 +1105,57 @@
           <svg style="width:12px;height:12px;fill:currentColor" viewBox="0 0 24 24">
             <path d="M10,17L5,12L6.41,10.58L10,14.17L17.59,6.58L19,8M12,2A10,10 0 1,0 22,12A10,10 0 0,0 12,2Z" />
           </svg>
-          평점 7.5+ | 투표수 500+ 만족
+          웰메이드 기준 만족 (영화 평점 7.5+ 투표 500+ / 드라마 평점 7.5+ 투표 100+)
         `;
       }
     }
 
-    // Render Movie Cards to UI
-    function renderMovieCards(moviesList) {
+    // Render Movie & TV Cards to UI
+    function renderMovieCards(mediaList) {
       moviesContainer.innerHTML = '';
       
-      moviesList.forEach(movie => {
+      mediaList.forEach(item => {
         const card = document.createElement('div');
         card.className = 'movie-card';
 
-        // Release Date parsing
-        const releaseYear = movie.release_date ? movie.release_date.split('-')[0] : '연도 미상';
-        const ratingScore = movie.vote_average ? movie.vote_average.toFixed(1) : '평가 없음';
+        const isMovie = item.media_type === 'movie';
+        const title = isMovie ? item.title : item.name;
+        const releaseDate = isMovie ? item.release_date : item.first_air_date;
+        const releaseYear = releaseDate ? releaseDate.split('-')[0] : '연도 미상';
+        const ratingScore = item.vote_average ? item.vote_average.toFixed(1) : '평가 없음';
+        
+        const mediaTypeLabel = isMovie ? '영화' : '드라마';
+        const mediaTypeClass = isMovie ? 'media-movie' : 'media-tv';
         
         // Netflix search queries should encode URI component safely
-        const netflixSearchUrl = `https://www.netflix.com/search?q=${encodeURIComponent(movie.title)}`;
+        const netflixSearchUrl = `https://www.netflix.com/search?q=${encodeURIComponent(title)}`;
 
         // Poster image construction. If null, use elegant title fallback
-        const posterUrl = movie.poster_path 
-          ? `https://image.tmdb.org/t/p/w500${movie.poster_path}` 
+        const posterUrl = item.poster_path 
+          ? `https://image.tmdb.org/t/p/w500${item.poster_path}` 
           : null;
 
-        const overviewText = movie.overview ? movie.overview : '등록된 줄거리 요약 정보가 없습니다.';
+        const overviewText = item.overview ? item.overview : '등록된 줄거리 요약 정보가 없습니다.';
 
         card.innerHTML = `
           <div class="movie-poster-wrapper">
             ${posterUrl 
-              ? `<img src="${posterUrl}" alt="${movie.title} 포스터" class="movie-poster" loading="lazy">`
+              ? `<img src="${posterUrl}" alt="${title} 포스터" class="movie-poster" loading="lazy">`
               : `<div class="poster-fallback">
-                  <span>🎬</span>
-                  <div style="font-weight:700; font-size:1rem;">${movie.title}</div>
+                  <span>${isMovie ? '🎬' : '📺'}</span>
+                  <div style="font-weight:700; font-size:1rem;">${title}</div>
                   <div style="font-size:0.75rem; color:var(--text-sub)">이미지 준비중</div>
                  </div>`
             }
             <span class="score-badge">★ ${ratingScore}</span>
+            <span class="media-type-badge ${mediaTypeClass}">${mediaTypeLabel}</span>
           </div>
           <div class="movie-info">
             <div class="movie-meta">
               <span>개봉: ${releaseYear}</span>
-              <span>투표: ${movie.vote_count.toLocaleString()}회</span>
+              <span>투표: ${item.vote_count.toLocaleString()}회</span>
             </div>
-            <h4 class="movie-title" title="${movie.title}">${movie.title}</h4>
+            <h4 class="movie-title" title="${title}">${title}</h4>
             <p class="movie-overview" title="${overviewText}">${overviewText}</p>
             <a href="${netflixSearchUrl}" target="_blank" rel="noopener noreferrer" class="netflix-btn">
               <svg viewBox="0 0 24 24">
@@ -1050,6 +1168,21 @@
         moviesContainer.appendChild(card);
       });
     }
+
+    // Click dice to roll a random mood
+    const diceTrigger = document.getElementById('dice-trigger');
+    diceTrigger.addEventListener('click', () => {
+      if (isRolling) return;
+      
+      const moodKeys = Object.keys(moodConfig);
+      const randomMood = moodKeys[Math.floor(Math.random() * moodKeys.length)];
+      
+      // Find the button and trigger click
+      const targetBtn = document.querySelector(`.mood-btn[data-mood="${randomMood}"]`);
+      if (targetBtn) {
+        targetBtn.click();
+      }
+    });
 
     // Run Initial checks
     window.addEventListener('DOMContentLoaded', init);

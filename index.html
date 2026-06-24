@@ -238,7 +238,7 @@
       position: relative;
       transform-style: preserve-3d;
       transform: rotateX(-20deg) rotateY(45deg);
-      transition: transform 1.2s cubic-bezier(0.19, 1, 0.22, 1);
+      transition: none;
     }
 
     .face {
@@ -266,16 +266,7 @@
     .face.top    { transform: rotateX(90deg) translateZ(60px); }
     .face.bottom { transform: rotateX(-90deg) translateZ(60px); }
 
-    /* Dice Spinner Keyframes for wild rotation */
-    @keyframes rollSpin {
-      0% { transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
-      50% { transform: rotateX(360deg) rotateY(720deg) rotateZ(180deg); }
-      100% { transform: rotateX(720deg) rotateY(1440deg) rotateZ(360deg); }
-    }
 
-    .cube.rolling {
-      animation: rollSpin 0.25s infinite linear;
-    }
 
     /* Mood Selector Grid */
     .mood-grid {
@@ -366,16 +357,10 @@
     }
 
     .loading-bar-inner {
-      width: 0%;
+      width: 100%;
       height: 100%;
       background-color: var(--netflix-red);
       box-shadow: 0 0 10px var(--netflix-red-glow);
-      animation: progressAnim 1s ease-in-out forwards;
-    }
-
-    @keyframes progressAnim {
-      0% { width: 0%; }
-      100% { width: 100%; }
     }
 
     .loading-text {
@@ -383,12 +368,6 @@
       color: var(--netflix-red);
       font-weight: 500;
       letter-spacing: 1px;
-      animation: pulse 1s infinite alternate;
-    }
-
-    @keyframes pulse {
-      0% { opacity: 0.5; }
-      100% { opacity: 1; }
     }
 
     /* Results Header Badge & Actions */
@@ -428,18 +407,6 @@
       flex-direction: column;
       align-items: center;
       gap: 1.5rem;
-      animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    }
-
-    @keyframes fadeInUp {
-      from {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
     }
 
     .movies-grid {
@@ -992,18 +959,9 @@
       isRolling = true;
       resultsArea.style.display = 'none';
       
-      // 1. Start 3D Cube Spin Animation
-      diceCube.classList.add('rolling');
-      
-      // Show loading progress bar
+      // Show loading panel
       loadingPanel.style.display = 'flex';
-      loadingBar.style.width = '0%';
-      // Trigger reflow to restart animation
-      void loadingBar.offsetWidth;
-      loadingBar.style.animation = 'progressAnim 1s ease-in-out forwards';
 
-      // Start asynchronous API fetch concurrently with the loading timer
-      const startTime = Date.now();
       let candidates = [];
       let fetchError = null;
       let usedFallback = false;
@@ -1015,13 +973,7 @@
         fetchError = err.message;
       }
 
-      // Ensure the dice rolls for at least 1000ms for sensory satisfaction
-      const elapsedTime = Date.now() - startTime;
-      const remainingTime = Math.max(0, 1000 - elapsedTime);
-      await new Promise(resolve => setTimeout(resolve, remainingTime));
-
-      // 2. Stop Cube Spin and point it to the matching face
-      diceCube.classList.remove('rolling');
+      // Point Cube to the matching face instantly
       const config = moodConfig[selectedMood];
       if (config && config.rotation) {
         // Apply rotation based on selected mood
